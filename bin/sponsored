@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+
+require 'bundler/setup'
+Bundler.require(:default)
+
+$:.unshift File.join(File.dirname(__FILE__), '../lib')
+require 'sponsored'
+
+Dotenv.load
+
+bot = Cinch::Bot.new do
+  configure do |c|
+    c.channels = ENV['IRC_CHANNELS'].split(',')
+    c.messages_per_second = 1
+    c.nick = ENV['IRC_NICKNAME']
+    c.password = ENV['IRC_PASSWORD']
+    c.plugins.plugins = [Sponsored::Plugin]
+    c.port = ENV['IRC_PORT'].to_i
+    c.realname = ENV['IRC_REALNAME']
+    c.server = ENV['IRC_SERVER']
+    c.ssl.use = ENV['IRC_SSL'] == 'true'
+    c.ssl.verify = ENV.fetch('IRC_VERIFY_SSL', 'true') == 'true'
+    c.user = ENV['IRC_USERNAME']
+  end
+end
+
+bot.start
