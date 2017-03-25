@@ -31,7 +31,15 @@ The environment variables required to start the bot are:
 | `IRC_SSL` | Set to `true` to connect using SSL/TLS. |
 | `IRC_USERNAME` | The IRC connection username. |
 | `IRC_VERIFY_SSL` | Set to `false` to accept an invalid SSL/TLS certificate. |
-| `SPONSORED_IGNORE_USERS` | A comma-separated list of usernames (not nicknames) to ignore. |
+
+These environment variables are optional:
+
+| Name | Description |
+|------|-------------|
+| `SPONSORED_IGNORED_USERS` | A comma-separated list of usernames (not nicknames) to ignore. |
+| `SPONSORED_CHANNEL_AD_TTL_MESSAGES` | The minimum number of messages between ads, per channel. Default: 15 |
+| `SPONSORED_CHANNEL_AD_TTL_SECONDS` | The minimum number of seconds between ads, per channel. Default: 3600 |
+| `SPONSORED_QUERY_TTL_SECONDS` | The minimum number of seconds between API queries across all channels. Default: 5 |
 
 Then, start the bot.
 

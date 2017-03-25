@@ -4,7 +4,7 @@ module Sponsored
   class Plugin
     include Cinch::Plugin
 
-    listen_to :message, method: :on_message
+    listen_to :channel, method: :on_message
     match /sponsored/, method: :on_sponsored
 
     private
@@ -14,14 +14,15 @@ module Sponsored
     end
 
     def on_message(message)
-      # TODO
+      input_phrase = message.message
+      advertise message, input_phrase
     end
 
     def on_sponsored(message)
-      search_phrase = message.message.slice(/\A!sponsored\s+(.*?)\s*\z/, 1)
+      input_phrase = message.message.slice(/\A!sponsored\s+(.*?)\s*\z/, 1)
 
-      if search_phrase
-        advertise message, search_phrase, debug: true
+      if input_phrase
+        advertise message, input_phrase, debug: true
       end
     end
   end

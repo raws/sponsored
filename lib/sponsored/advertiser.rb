@@ -10,23 +10,31 @@ module Sponsored
 
     def advertise!
       catch :halt do
-        check_ignore_list
-        log_babelfy_tokens
+        rate_limit do |channel|
+          check_ignore_list
+          reset_query_rate_limiter
+          log_babelfy_tokens
 
-        if any_interesting_words?
-          log_search_phrase
+          if any_interesting_words?
+            log_search_phrase
 
-          if results?
-            log_search_engine
-            reply_with_result
-          else
-            log_no_results
+            if results?
+              log_search_engine
+              channel.reset!
+              reply_with_result
+            else
+              log_no_results
+            end
           end
         end
       end
     end
 
     private
+
+    def ad_rate_limiter
+      @@ad_rate_limiter ||= AdRateLimiter.new
+    end
 
     def any_interesting_words?
       babelfy_client.most_interesting_words.any?
@@ -51,11 +59,11 @@ module Sponsored
     end
 
     def ignore?
-      ignored_users.include? @message.user.user.downcase
+      ignore_list.ignore? @message
     end
 
-    def ignored_users
-      @@ignored_users ||= ENV.fetch('SPONSORED_IGNORE_USERS', '').split(',').map(&:downcase)
+    def ignore_list
+      @ignore_list ||= IgnoreList.new
     end
 
     def log_babelfy_tokens
@@ -80,8 +88,26 @@ module Sponsored
       debug "Search phrase: #{search.search_phrase.inspect}"
     end
 
+    def query_rate_limiter
+      @@query_rate_limiter ||= QueryRateLimiter.new
+    end
+
+    def rate_limit(&rate_limited_block)
+      if @debug
+        rate_limited_block.call DebugChannel.new
+      else
+        query_rate_limiter.rate_limit do
+          ad_rate_limiter.rate_limit @message, &rate_limited_block
+        end
+      end
+    end
+
     def reply_with_result
       @message.reply result.to_irc
+    end
+
+    def reset_query_rate_limiter
+      query_rate_limiter.reset!
     end
 
     def result
@@ -102,6 +128,12 @@ module Sponsored
 
     def search_phrase
       babelfy_client.most_interesting_words.join ' '
+    end
+
+    class DebugChannel
+      def reset!
+        # no-op
+      end
     end
   end
 end
